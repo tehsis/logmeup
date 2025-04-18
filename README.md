@@ -1,87 +1,18 @@
-# Welcome to React Router!
+# LogMeUp
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Log Me Up is your Log / Note taking app that helps you get back on track and helps on not forgetting important events from your life.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## How it works?
 
-## Features
+You can use LogMeUp as a note taking app. Notes are automatically categorized by date. Each date is immutable, what happen in the past can not change.
+LogMeUp will detect action items from your logs and move it to your TODO list, powered by TaskMeUp.
+On Each new date, LogMeUp will prompt you to reflect on your previous notes and remind about what's important.
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## System Design
 
-## Getting Started
+LogMeUp is being developed in public and this section might get completely altered as we go.
+For its PoC, the app is developed using React Router v7 as fullstack framework, using Postgres as for DB storage and OpenAI as model provider.
 
-### Installation
+## Development
 
-Install the dependencies:
-
-```bash
-npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
-npm run dev
-```
-
-Your application will be available at `http://localhost:5173`.
-
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+If you want to try out or contribute to LogMeUP, simply clone this repo, install its dependencies using `npm i` and start it with `npm run dev`.
