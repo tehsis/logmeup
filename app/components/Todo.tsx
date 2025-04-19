@@ -1,44 +1,47 @@
-import { useState } from 'react';
-
-interface TodoItem {
-  id: number;
-  text: string;
-  completed: boolean;
-}
+import { useTodo } from '../hooks/useTodo';
+import { useTodoExtraction } from '../hooks/useTodoExtraction';
+import type { TodoCandidate } from '../services/llmService';
 
 export function Todo() {
-  const [todos, setTodos] = useState<TodoItem[]>([]);
-  const [newTodo, setNewTodo] = useState('');
+  const {
+    todos,
+    newTodo,
+    setNewTodo,
+    addTodo,
+    toggleTodo,
+    deleteTodo
+  } = useTodo();
 
-  const addTodo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTodo.trim() === '') return;
-    
-    setTodos([
-      ...todos,
-      {
-        id: Date.now(),
-        text: newTodo.trim(),
-        completed: false
-      }
-    ]);
-    setNewTodo('');
-  };
+  const {
+    text,
+    setText,
+    candidates,
+    isLoading
+  } = useTodoExtraction();
 
-  const toggleTodo = (id: number) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
-  };
-
-  const deleteTodo = (id: number) => {
-    setTodos(todos.filter(todo => todo.id !== id));
+  const handleAddCandidate = (candidate: TodoCandidate) => {
+    addTodo({
+      preventDefault: () => {},
+    } as React.FormEvent);
+    setNewTodo(candidate.text);
   };
 
   return (
     <div className="h-full p-4">
       <h2 className="text-xl font-bold mb-4">Todo List</h2>
       
+      {/* Log Text Input */}
+      <div className="mb-4">
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Paste your log text here..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={4}
+        />
+      </div>
+
+      {/* Todo Input Form */}
       <form onSubmit={addTodo} className="mb-4">
         <div className="flex gap-2">
           <input
@@ -57,6 +60,30 @@ export function Todo() {
         </div>
       </form>
 
+      {/* Suggested Todos */}
+      {candidates.length > 0 && (
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">Suggested Todos</h3>
+          <div className="space-y-2">
+            {candidates.map((candidate, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 p-2 bg-gray-50 rounded-md"
+              >
+                <span className="flex-1 text-gray-800">{candidate.text}</span>
+                <button
+                  onClick={() => handleAddCandidate(candidate)}
+                  className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  Add
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Todo List */}
       <ul className="space-y-2">
         {todos.map(todo => (
           <li

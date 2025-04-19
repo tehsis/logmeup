@@ -10,13 +10,6 @@ export default function NotesPage() {
       {/* Markdown Editor - Right Side */}
       <div className="flex-1 p-4" data-color-mode="dark">
         <div>
-          <MDEditor
-            value={content}
-            onChange={setContent}
-            height={500}
-            preview="edit"
-            hideToolbar={false}
-          />
         </div>
       </div>
       <div className=" border-l">
