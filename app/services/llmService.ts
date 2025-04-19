@@ -27,7 +27,7 @@ export class LLMService {
 
     this.prompt =  ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
-        "You are a personal assistant that extracts action items from text. Return only a JSON array of objects with 'text' and 'confidence' fields."
+        "You are a personal assistant that identifies and suggests action items from text. Return only a JSON array of objects with 'text' and 'confidence' fields."
       ),
       HumanMessagePromptTemplate.fromTemplate(
         "Extract action items from this text. Include items that follow 'TODO'. {text}"
