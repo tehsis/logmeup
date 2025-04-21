@@ -1,28 +1,24 @@
 import { ChatOllama } from "@langchain/ollama";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { StringOutputParser, JsonOutputParser } from "@langchain/core/output_parsers";
+import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from "@langchain/core/prompts";
-import { z  } from "zod"
+import { configuration } from "../utils/configuration.server";
+import type { TodoCandidate } from "../models/Todo";
+import { z } from "zod";
 
-const todoCandidateSchema =  z.object({
+const todoCandidateSchema = z.object({
   text: z.string().describe("Todo action item"),
   confidence: z.number().describe("The confidence level")
 })
 
-export interface TodoCandidate {
-  text: string;
-  confidence: number;
-}
-
 export class LLMService {
-  private model: ChatOllama;
+  private model: any;
   private prompt: ChatPromptTemplate;
   private outputParser: JsonOutputParser<TodoCandidate[]>;
 
   constructor() {
     this.model = new ChatOllama({
-      baseUrl: "http://localhost:11434",
-      model: "llama3",
+      baseUrl: configuration.llm.url,
+      model: configuration.llm.model,
     });
 
     this.prompt =  ChatPromptTemplate.fromMessages([
@@ -48,7 +44,6 @@ export class LLMService {
       }));
     } catch (error) {
       console.error("Error extracting todos:", error);
-      console.log("WOO")
       return [];
     }
   }

@@ -1,4 +1,4 @@
-import type { TodoCandidate } from '../services/llmService';
+import type { TodoCandidate } from '../models/Todo';
 import type { TodoItem } from '../hooks/useTodo'; // Import TodoItem type
 
 // Define props for the Todo component
@@ -11,6 +11,7 @@ interface TodoProps {
   deleteTodo: (id: number) => void;
   candidates: TodoCandidate[];
   isLoading: boolean;
+  error: string | null; // Add error prop
   onAddCandidate: (text: string) => void; // Function to handle adding a candidate
 }
 
@@ -23,6 +24,7 @@ export function Todo({
   deleteTodo,
   candidates,
   isLoading,
+  error, // Destructure error
   onAddCandidate // Destructure the new prop
 }: TodoProps) {
 
@@ -57,6 +59,10 @@ export function Todo({
          <h3 className="text-lg font-semibold mb-2">
            Suggested Todos {isLoading && <span className="text-sm text-gray-500 ml-2">Loading...</span>}
          </h3>
+        {/* Display Error Message */}
+        {error && (
+          <p className="text-sm text-red-500 bg-red-100 p-2 rounded mb-2">{error}</p>
+        )}
         {candidates.length > 0 && (
           <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-2 bg-gray-50"> {/* Scrollable container */}
             {candidates.map((candidate, index) => (

@@ -11,7 +11,7 @@ export default function NotesPage() {
   const [activeTab, setActiveTab] = useState<Tab>('notes');
 
   const { todos, newTodo, setNewTodo, addTodo, toggleTodo, deleteTodo } = useTodo();
-  const { candidates, isLoading } = useTodoExtraction(content || '');
+  const { candidates, isLoading, error } = useTodoExtraction(content || '');
 
   const handleAddCandidate = (candidateText: string) => {
     setNewTodo(candidateText);
@@ -60,6 +60,7 @@ export default function NotesPage() {
             deleteTodo={deleteTodo}
             candidates={candidates}
             isLoading={isLoading}
+            error={error}
             onAddCandidate={handleAddCandidate}
           />
         </div>
