@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "pulumi run logmeup/dev -- react-router dev",
+    "dev": "esc run logmeup/dev -- react-router dev",
+    "dev-openai": "esc run -i logmeup/dev-openai -- react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
@@ -12,6 +13,7 @@
     "@langchain/community": "^0.3.41",
     "@langchain/core": "^0.3.45",
     "@langchain/ollama": "^0.2.0",
+    "@langchain/openai": "^0.5.8",
     "@react-router/fs-routes": "^7.5.0",
     "@react-router/node": "^7.5.0",
     "@react-router/serve": "^7.5.0",
