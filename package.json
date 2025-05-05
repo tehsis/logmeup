@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "esc run logmeup/dev -- react-router dev",
-    "dev-openai": "esc run -i logmeup/dev-openai -- react-router dev",
+    "dev": "pulumi env run alidion/logmeup/dev -- react-router dev",
+    "dev-openai": "esc run -i alidion/logmeup/dev-openai -- react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
