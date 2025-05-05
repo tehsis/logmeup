@@ -32,7 +32,7 @@ class OpenAIProvider implements LLMProvider {
   getModel() {
     return new ChatOpenAI({
       modelName: configuration.llm.model,
-      openAIApiKey: process.env.OPENAI_APIKEY?.replace("cyphertext:", ""),
+      openAIApiKey: process.env.OPENAI_APIKEY?.replace("ciphertext:", ""), // I need to remove chiphertext prefix in Pulumi ESC
     });
   }
 }
