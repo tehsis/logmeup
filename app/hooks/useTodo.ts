@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface TodoItem {
   id: number;
@@ -6,47 +6,49 @@ export interface TodoItem {
   completed: boolean;
 }
 
-const STORAGE_KEY = 'todos';
+const STORAGE_KEY = "todos";
 
 export function useTodo() {
   const [todos, setTodos] = useState<TodoItem[]>(() => {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     const savedTodos = localStorage.getItem(STORAGE_KEY);
     return savedTodos ? JSON.parse(savedTodos) : [];
   });
 
-  const [newTodo, setNewTodo] = useState('');
+  const [newTodo, setNewTodo] = useState("");
 
   // Save to localStorage whenever todos change
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
     }
   }, [todos]);
 
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newTodo.trim() === '') return;
-    
+    if (newTodo.trim() === "") return;
+
     setTodos([
       ...todos,
       {
         id: Date.now(),
         text: newTodo.trim(),
-        completed: false
-      }
+        completed: false,
+      },
     ]);
-    setNewTodo('');
+    setNewTodo("");
   };
 
   const toggleTodo = (id: number) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
   };
 
   const deleteTodo = (id: number) => {
-    setTodos(todos.filter(todo => todo.id !== id));
+    setTodos(todos.filter((todo) => todo.id !== id));
   };
 
   return {
@@ -55,6 +57,6 @@ export function useTodo() {
     setNewTodo,
     addTodo,
     toggleTodo,
-    deleteTodo
+    deleteTodo,
   };
-} 
+}
