@@ -1,54 +1,36 @@
 import { useState, useEffect } from "react";
-
-export interface TodoItem {
-  id: number;
-  text: string;
-  completed: boolean;
-}
-
-const STORAGE_KEY = "todos";
+import {
+  type TodoItem,
+  loadTodos,
+  saveTodos,
+  createTodo,
+  toggleTodoCompletion,
+  deleteTodoById,
+} from "../models/Todo";
 
 export function useTodo() {
-  const [todos, setTodos] = useState<TodoItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    const savedTodos = localStorage.getItem(STORAGE_KEY);
-    return savedTodos ? JSON.parse(savedTodos) : [];
-  });
-
+  const [todos, setTodos] = useState<TodoItem[]>(() => loadTodos());
   const [newTodo, setNewTodo] = useState("");
 
   // Save to localStorage whenever todos change
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-    }
+    saveTodos(todos);
   }, [todos]);
 
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTodo.trim() === "") return;
 
-    setTodos([
-      ...todos,
-      {
-        id: Date.now(),
-        text: newTodo.trim(),
-        completed: false,
-      },
-    ]);
+    setTodos([...todos, createTodo(newTodo)]);
     setNewTodo("");
   };
 
   const toggleTodo = (id: number) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
+    setTodos(toggleTodoCompletion(todos, id));
   };
 
   const deleteTodo = (id: number) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+    setTodos(deleteTodoById(todos, id));
   };
 
   return {

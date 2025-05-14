@@ -1,38 +1,80 @@
 export interface NoteContent {
   text: string;
   lastModified: number;
+  date: string; // YYYY-MM-DD format
+}
+
+interface NotesStorage {
+  [date: string]: NoteContent;
 }
 
 const STORAGE_KEY = "notes-content";
 
-export function loadNote(): NoteContent {
+function getToday(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+export function loadNote(date?: string): NoteContent {
   if (typeof window === "undefined") {
     return {
-      text: "# Start writing your note here...",
+      text: "",
       lastModified: Date.now(),
+      date: getToday(),
     };
   }
 
-  const savedNote = localStorage.getItem(STORAGE_KEY);
-  if (savedNote) {
+  const savedNotes = localStorage.getItem(STORAGE_KEY);
+  const targetDate = date || getToday();
+
+  if (savedNotes) {
     try {
-      return JSON.parse(savedNote);
+      const notes: NotesStorage = JSON.parse(savedNotes);
+      if (notes[targetDate]) {
+        return notes[targetDate];
+      }
     } catch {
-      return {
-        text: "# Start writing your note here...",
-        lastModified: Date.now(),
-      };
+      // Fall through to default return
     }
   }
 
   return {
-    text: "# Start writing your note here...",
+    text: "",
     lastModified: Date.now(),
+    date: targetDate,
   };
 }
 
 export function saveNote(note: NoteContent): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(note));
+  if (typeof window === "undefined") return;
+
+  const savedNotes = localStorage.getItem(STORAGE_KEY);
+  let notes: NotesStorage = {};
+
+  if (savedNotes) {
+    try {
+      notes = JSON.parse(savedNotes);
+    } catch {
+      // Use empty notes object if parse fails
+    }
+  }
+
+  // Only allow saving if it's today's note
+  if (note.date === getToday()) {
+    notes[note.date] = note;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  }
+}
+
+export function getAllDates(): string[] {
+  if (typeof window === "undefined") return [getToday()];
+
+  const savedNotes = localStorage.getItem(STORAGE_KEY);
+  if (!savedNotes) return [getToday()];
+
+  try {
+    const notes: NotesStorage = JSON.parse(savedNotes);
+    return Object.keys(notes).sort().reverse();
+  } catch {
+    return [getToday()];
   }
 }

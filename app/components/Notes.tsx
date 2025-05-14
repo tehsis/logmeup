@@ -1,38 +1,93 @@
 import { useState, useEffect } from "react";
-import { type NoteContent, loadNote, saveNote } from "../models/Note";
+import {
+  type NoteContent,
+  loadNote,
+  saveNote,
+  getAllDates,
+} from "../models/Note";
 
 interface NotesProps {
   onContentChange: (content: string, lastModified: number) => void;
 }
 
 export function Notes({ onContentChange }: NotesProps) {
-  const [content, setContent] = useState<string>(() => loadNote().text);
-  const [lastModified, setLastModified] = useState<number>(
-    () => loadNote().lastModified
+  const [selectedDate, setSelectedDate] = useState<string>(
+    () => new Date().toISOString().split("T")[0]
   );
+  const [availableDates, setAvailableDates] = useState<string[]>(() =>
+    getAllDates()
+  );
+  const [content, setContent] = useState<string>(
+    () => loadNote(selectedDate).text
+  );
+  const [lastModified, setLastModified] = useState<number>(
+    () => loadNote(selectedDate).lastModified
+  );
+
+  // Load note content when selected date changes
+  useEffect(() => {
+    const note = loadNote(selectedDate);
+    setContent(note.text);
+    setLastModified(note.lastModified);
+  }, [selectedDate]);
 
   // Save content to localStorage whenever it changes
   useEffect(() => {
     const noteContent: NoteContent = {
       text: content,
       lastModified: Date.now(),
+      date: selectedDate,
     };
     saveNote(noteContent);
     setLastModified(noteContent.lastModified);
     onContentChange(content, noteContent.lastModified);
-  }, [content, onContentChange]);
+
+    // Update available dates when a new note is created
+    setAvailableDates(getAllDates());
+  }, [content, selectedDate, onContentChange]);
+
+  const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
   return (
     <div className="p-4 flex-1 flex flex-col">
-      <h1 className="text-2xl font-bold mb-4">My Notes</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">My Notes</h1>
+        <select
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {availableDates.map((date) => (
+            <option key={date} value={date}>
+              {new Date(date).toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex-1 overflow-hidden">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Start writing your note here..."
+          disabled={!isToday}
+          className={`w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500
+            ${!isToday ? "bg-gray-100 cursor-not-allowed" : ""}`}
+          placeholder={
+            isToday
+              ? "Start writing your note here..."
+              : "This note is from a previous day and cannot be edited"
+          }
         />
       </div>
+      {!isToday && (
+        <div className="mt-2 text-sm text-gray-500">
+          This note is from a previous day and cannot be edited
+        </div>
+      )}
     </div>
   );
 }

@@ -57,6 +57,16 @@ export default function NotesPage() {
       <div className="flex-1 flex md:flex-row overflow-hidden">
         <div
           className={`
+            md:flex-1 flex flex-col overflow-hidden
+            ${activeTab === "notes" ? "flex-1" : "hidden"}
+            md:block
+          `}
+        >
+          <Notes onContentChange={handleContentChange} />
+        </div>
+
+        <div
+          className={`
             md:border-r md:block overflow-y-auto
             ${activeTab === "todos" ? "flex-1" : "hidden"}
           `}
@@ -73,16 +83,6 @@ export default function NotesPage() {
             error={error}
             onAddCandidate={handleAddCandidate}
           />
-        </div>
-
-        <div
-          className={`
-            md:flex-1 flex flex-col overflow-hidden
-            ${activeTab === "notes" ? "flex-1" : "hidden"}
-            md:block
-          `}
-        >
-          <Notes onContentChange={handleContentChange} />
         </div>
       </div>
     </div>
