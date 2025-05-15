@@ -25,8 +25,3 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: "Failed to extract todos" }, { status: 500 });
   }
 }
-
-// Optional: Add a loader to handle GET requests if needed, otherwise it defaults
-// export async function loader() {
-//   return json({ message: "POST text content to extract todos" });
-// }

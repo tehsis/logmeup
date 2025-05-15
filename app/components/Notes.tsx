@@ -55,7 +55,7 @@ export function Notes({ onContentChange }: NotesProps) {
         <select
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 bg-black border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {availableDates.map((date) => (
             <option key={date} value={date}>
@@ -75,7 +75,7 @@ export function Notes({ onContentChange }: NotesProps) {
           onChange={(e) => setContent(e.target.value)}
           disabled={!isToday}
           className={`w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto
-            ${!isToday ? "bg-gray-100 cursor-not-allowed" : ""}`}
+            ${!isToday ? "bg-gray-800 cursor-not-allowed" : ""}`}
           placeholder={
             isToday
               ? "Start writing your note here..."

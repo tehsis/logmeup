@@ -57,7 +57,7 @@ export function Todo({
         {" "}
         {/* Added flex-shrink-0 */}
         <h3 className="text-lg font-semibold mb-2">
-          Suggested Todos{" "}
+          Suggested Todos
           {isLoading && (
             <span className="text-sm text-gray-500 ml-2">Loading...</span>
           )}
@@ -69,17 +69,14 @@ export function Todo({
           </p>
         )}
         {candidates.length > 0 && (
-          <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-2 bg-gray-50">
-            {" "}
+          <div className="space-y-2 overflow-y-auto border rounded p-4 ">
             {/* Scrollable container */}
             {candidates.map((candidate, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 p-2 bg-white rounded-md shadow-sm"
+                className="flex items-center gap-2 p-2 border-1 rounded-md shadow-sm"
               >
-                <span className="flex-1 text-sm text-gray-800">
-                  {candidate.text}
-                </span>
+                <span className="flex-1 text-sm">{candidate.text}</span>
                 <button
                   onClick={() => onAddCandidate(candidate.text)} // Use the passed handler
                   className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 flex-shrink-0"
