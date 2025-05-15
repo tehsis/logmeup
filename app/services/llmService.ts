@@ -1,6 +1,9 @@
 import { ChatOllama } from "@langchain/ollama";
 import { ChatOpenAI } from "@langchain/openai";
-import { JsonOutputParser } from "@langchain/core/output_parsers";
+import {
+  JsonOutputParser,
+  StringOutputParser,
+} from "@langchain/core/output_parsers";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
@@ -48,7 +51,7 @@ export class LLMService {
 
     this.prompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
-        "You are a personal assistant that identifies and suggests action items from text. Return only a JSON array of objects with 'text' and 'confidence' fields."
+        "You are a personal assistant that identifies and suggests action items from text. Return only a JSON array of objects with 'text' and 'confidence' fields. Do not include any other text in your response."
       ),
       HumanMessagePromptTemplate.fromTemplate(
         "Extract action items from this text. Include items that follow 'TODO'. {text}"

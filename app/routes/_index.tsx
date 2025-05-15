@@ -13,10 +13,7 @@ export default function NotesPage() {
 
   const { todos, newTodo, setNewTodo, addTodo, toggleTodo, deleteTodo } =
     useTodo();
-  const { candidates, isLoading, error } = useTodoExtraction(
-    content || "",
-    lastModified
-  );
+  const { candidates, isLoading, error } = useTodoExtraction(content || "");
 
   const handleContentChange = (newContent: string, newLastModified: number) => {
     setContent(newContent);

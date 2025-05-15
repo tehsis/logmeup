@@ -49,8 +49,8 @@ export function Notes({ onContentChange }: NotesProps) {
   const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
   return (
-    <div className="p-4 flex-1 flex flex-col">
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-4 h-full flex flex-col">
+      <div className="flex justify-between items-center mb-4 flex-shrink-0">
         <h1 className="text-2xl font-bold">My Notes</h1>
         <select
           value={selectedDate}
@@ -74,7 +74,7 @@ export function Notes({ onContentChange }: NotesProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           disabled={!isToday}
-          className={`w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500
+          className={`w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto
             ${!isToday ? "bg-gray-100 cursor-not-allowed" : ""}`}
           placeholder={
             isToday

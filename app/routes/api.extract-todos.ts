@@ -9,7 +9,7 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     const { text } = await request.json();
 
-    if (typeof text !== 'string' || !text.trim()) {
+    if (typeof text !== "string" || !text.trim()) {
       return { candidates: [] }; // Return empty if no valid text
     }
 
@@ -19,7 +19,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const candidates = await llmService.extractTodos(text);
 
     return { candidates };
-
   } catch (error) {
     console.error("API Error extracting todos:", error);
     // Avoid leaking internal error details to the client
@@ -30,4 +29,4 @@ export async function action({ request }: ActionFunctionArgs) {
 // Optional: Add a loader to handle GET requests if needed, otherwise it defaults
 // export async function loader() {
 //   return json({ message: "POST text content to extract todos" });
-// } 
+// }
