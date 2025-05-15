@@ -69,17 +69,17 @@ export function Todo({
           </p>
         )}
         {candidates.length > 0 && (
-          <div className="space-y-2 overflow-y-auto border rounded p-4 ">
+          <div className="space-y-2 overflow-y-auto border rounded p-4">
             {/* Scrollable container */}
             {candidates.map((candidate, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 p-2 border-1 rounded-md shadow-sm"
+                className="flex items-center gap-2 p-2 border-1 rounded-md shadow-sm hover:bg-white hover:text-black transition-colors duration-200"
               >
                 <span className="flex-1 text-sm">{candidate.text}</span>
                 <button
                   onClick={() => onAddCandidate(candidate.text)} // Use the passed handler
-                  className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 flex-shrink-0"
+                  className="px-2 cursor-pointer py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 flex-shrink-0"
                 >
                   Add
                 </button>
@@ -100,7 +100,7 @@ export function Todo({
           {todos.map((todo) => (
             <li
               key={todo.id}
-              className="flex items-center gap-2 p-2 bg-white rounded-md shadow-sm"
+              className="flex items-center gap-2 p-2 bg-black border border-white rounded-md shadow-sm"
             >
               <input
                 type="checkbox"
@@ -111,7 +111,7 @@ export function Todo({
               <span
                 className={`flex-1 ${
                   todo.completed ? "line-through text-gray-400" : ""
-                } text-blue-500`}
+                } text-white bg-black`}
               >
                 {todo.text}
               </span>
@@ -120,7 +120,7 @@ export function Todo({
               </span>
               <button
                 onClick={() => deleteTodo(todo.id)}
-                className="text-red-500 hover:text-red-600"
+                className="cursor-pointer text-red-500 hover:text-red-600"
               >
                 ×
               </button>
