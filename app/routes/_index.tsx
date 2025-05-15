@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Todo } from "../components/Todo";
+import { Action } from "../components/Action";
 import { Notes } from "../components/Notes";
-import { useTodoExtraction } from "../hooks/useTodoExtraction";
-import { useTodo } from "../hooks/useTodo";
+import { useActionExtraction } from "../hooks/useActionExtraction";
+import { useAction } from "../hooks/useAction";
 
 type Tab = "notes" | "todos";
 
@@ -11,9 +11,9 @@ export default function NotesPage() {
   const [content, setContent] = useState<string>("");
   const [lastModified, setLastModified] = useState<number>(Date.now());
 
-  const { todos, newTodo, setNewTodo, addTodo, toggleTodo, deleteTodo } =
-    useTodo();
-  const { candidates, isLoading, error } = useTodoExtraction(content || "");
+  const { actions, newAction, setNewAction, addAction, toggleAction, deleteAction } =
+    useAction();
+  const { candidates, isLoading, error } = useActionExtraction(content || "");
 
   const handleContentChange = (newContent: string, newLastModified: number) => {
     setContent(newContent);
@@ -21,7 +21,7 @@ export default function NotesPage() {
   };
 
   const handleAddCandidate = (candidateText: string) => {
-    setNewTodo(candidateText);
+    setNewAction(candidateText);
   };
 
   return (
@@ -68,13 +68,13 @@ export default function NotesPage() {
             ${activeTab === "todos" ? "flex-1" : "hidden"}
           `}
         >
-          <Todo
-            todos={todos}
-            newTodo={newTodo}
-            setNewTodo={setNewTodo}
-            addTodo={addTodo}
-            toggleTodo={toggleTodo}
-            deleteTodo={deleteTodo}
+          <Action
+            actions={actions}
+            newAction={newAction}
+            setNewAction={setNewAction}
+            addAction={addAction}
+            toggleAction={toggleAction}
+            deleteAction={deleteAction}
             candidates={candidates}
             isLoading={isLoading}
             error={error}

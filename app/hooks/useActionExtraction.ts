@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { TodoCandidate } from "../models/Todo";
+import type { ActionCandidate } from "../models/Action";
 
-export function useTodoExtraction(currentContent: string) {
-  const [candidates, setCandidates] = useState<TodoCandidate[]>([]);
+export function useActionExtraction(currentContent: string) {
+  const [candidates, setCandidates] = useState<ActionCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lastProcessedContent = useRef<string | null>(null);
@@ -36,7 +36,7 @@ export function useTodoExtraction(currentContent: string) {
         "Fetching candidates for:",
         contentToExtract.substring(0, 50) + "..."
       );
-      const response = await fetch("/api/extract-todos", {
+      const response = await fetch("/api/extract-actions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,4 +107,4 @@ export function useTodoExtraction(currentContent: string) {
     isLoading,
     error,
   };
-}
+} 

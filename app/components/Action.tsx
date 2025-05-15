@@ -1,47 +1,42 @@
-import type { TodoCandidate, TodoItem } from "../models/Todo";
+import type { ActionCandidate, ActionItem } from "../models/Action";
 
-// Define props for the Todo component
-interface TodoProps {
-  todos: TodoItem[];
-  newTodo: string;
-  setNewTodo: (value: string) => void;
-  addTodo: (e: React.FormEvent) => void;
-  toggleTodo: (id: number) => void;
-  deleteTodo: (id: number) => void;
-  candidates: TodoCandidate[];
+// Define props for the Action component
+interface ActionProps {
+  actions: ActionItem[];
+  newAction: string;
+  setNewAction: (value: string) => void;
+  addAction: (e: React.FormEvent) => void;
+  toggleAction: (id: number) => void;
+  deleteAction: (id: number) => void;
+  candidates: ActionCandidate[];
   isLoading: boolean;
-  error: string | null; // Add error prop
-  onAddCandidate: (text: string) => void; // Function to handle adding a candidate
+  error: string | null;
+  onAddCandidate: (text: string) => void;
 }
 
-export function Todo({
-  todos,
-  newTodo,
-  setNewTodo,
-  addTodo,
-  toggleTodo,
-  deleteTodo,
+export function Action({
+  actions,
+  newAction,
+  setNewAction,
+  addAction,
+  toggleAction,
+  deleteAction,
   candidates,
   isLoading,
-  error, // Destructure error
-  onAddCandidate, // Destructure the new prop
-}: TodoProps) {
-  // Removed internal hook calls (useTodo, useTodoExtraction)
-  // Removed handleAddCandidate as it's now passed via props
-
+  error,
+  onAddCandidate,
+}: ActionProps) {
   return (
     <div className="h-full p-4 flex flex-col">
-      {" "}
-      {/* Use flex-col */}
-      <h2 className="text-xl font-bold mb-4 flex-shrink-0">Todo List</h2>
-      {/* Todo Input Form */}
-      <form onSubmit={addTodo} className="mb-4 flex-shrink-0">
+      <h2 className="text-xl font-bold mb-4 flex-shrink-0">Action List</h2>
+      {/* Action Input Form */}
+      <form onSubmit={addAction} className="mb-4 flex-shrink-0">
         <div className="flex gap-2">
           <input
             type="text"
-            value={newTodo}
-            onChange={(e) => setNewTodo(e.target.value)}
-            placeholder="Add a new task..."
+            value={newAction}
+            onChange={(e) => setNewAction(e.target.value)}
+            placeholder="Add a new action..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
@@ -52,17 +47,14 @@ export function Todo({
           </button>
         </div>
       </form>
-      {/* Suggested Todos */}
+      {/* Suggested Actions */}
       <div className="mb-4 flex-shrink-0">
-        {" "}
-        {/* Added flex-shrink-0 */}
         <h3 className="text-lg font-semibold mb-2">
-          Suggested Todos
+          Suggested Actions
           {isLoading && (
             <span className="text-sm text-gray-500 ml-2">Loading...</span>
           )}
         </h3>
-        {/* Display Error Message */}
         {error && (
           <p className="text-sm text-red-500 bg-red-100 p-2 rounded mb-2">
             {error}
@@ -70,7 +62,6 @@ export function Todo({
         )}
         {candidates.length > 0 && (
           <div className="space-y-2 overflow-y-auto border rounded p-4">
-            {/* Scrollable container */}
             {candidates.map((candidate, index) => (
               <div
                 key={index}
@@ -78,7 +69,7 @@ export function Todo({
               >
                 <span className="flex-1 text-sm">{candidate.text}</span>
                 <button
-                  onClick={() => onAddCandidate(candidate.text)} // Use the passed handler
+                  onClick={() => onAddCandidate(candidate.text)}
                   className="px-2 cursor-pointer py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 flex-shrink-0"
                 >
                   Add
@@ -91,48 +82,46 @@ export function Todo({
           <p className="text-sm text-gray-400 italic">No suggestions found.</p>
         )}
       </div>
-      {/* Todo List - Make this scrollable */}
+      {/* Action List */}
       <div className="flex-1 overflow-y-auto">
-        {" "}
-        {/* Added flex-1 and overflow-y-auto */}
-        <h3 className="text-lg font-semibold mb-2">Your Todos</h3>
+        <h3 className="text-lg font-semibold mb-2">Your Actions</h3>
         <ul className="space-y-2">
-          {todos.map((todo) => (
+          {actions.map((action) => (
             <li
-              key={todo.id}
+              key={action.id}
               className="flex items-center gap-2 p-2 bg-black border border-white rounded-md shadow-sm"
             >
               <input
                 type="checkbox"
-                checked={todo.completed}
-                onChange={() => toggleTodo(todo.id)}
+                checked={action.completed}
+                onChange={() => toggleAction(action.id)}
                 className="h-4 w-4 text-blue-500"
               />
               <span
                 className={`flex-1 ${
-                  todo.completed ? "line-through text-gray-400" : ""
+                  action.completed ? "line-through text-gray-400" : ""
                 } text-white bg-black`}
               >
-                {todo.text}
+                {action.text}
               </span>
               <span className="text-xs text-gray-400 mr-2">
-                {new Date(todo.createdAt).toLocaleDateString()}
+                {new Date(action.createdAt).toLocaleDateString()}
               </span>
               <button
-                onClick={() => deleteTodo(todo.id)}
+                onClick={() => deleteAction(action.id)}
                 className="cursor-pointer text-red-500 hover:text-red-600"
               >
                 ×
               </button>
             </li>
           ))}
-          {todos.length === 0 && (
+          {actions.length === 0 && (
             <p className="text-sm text-gray-400 italic">
-              Your todo list is empty.
+              Your action list is empty.
             </p>
           )}
         </ul>
       </div>
     </div>
   );
-}
+} 

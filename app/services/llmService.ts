@@ -10,11 +10,11 @@ import {
   HumanMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { configuration } from "../utils/configuration.server";
-import type { TodoCandidate } from "../models/Todo";
+import type { ActionCandidate } from "../models/Action";
 import { z } from "zod";
 
-const todoCandidateSchema = z.object({
-  text: z.string().describe("Todo action item"),
+const actionCandidateSchema = z.object({
+  text: z.string().describe("Action item"),
   confidence: z.number().describe("The confidence level"),
 });
 
@@ -43,7 +43,7 @@ class OpenAIProvider implements LLMProvider {
 export class LLMService {
   private model: any;
   private prompt: ChatPromptTemplate;
-  private outputParser: JsonOutputParser<TodoCandidate[]>;
+  private outputParser: JsonOutputParser<ActionCandidate[]>;
 
   constructor() {
     const provider = this.getProvider();
@@ -54,7 +54,7 @@ export class LLMService {
         "You are a personal assistant that identifies and suggests action items from text. Return only a JSON array of objects with 'text' and 'confidence' fields. Do not include any other text in your response."
       ),
       HumanMessagePromptTemplate.fromTemplate(
-        "Extract action items from this text. Include items that follow 'TODO'. {text}"
+        "Extract action items from this text. {text}"
       ),
     ]);
 
@@ -71,7 +71,7 @@ export class LLMService {
     }
   }
 
-  async extractTodos(text: string): Promise<TodoCandidate[]> {
+  async extractActions(text: string): Promise<ActionCandidate[]> {
     try {
       const chain = this.prompt.pipe(this.model).pipe(this.outputParser);
       const response = await chain.invoke({ text });
@@ -81,7 +81,7 @@ export class LLMService {
         confidence: item.confidence,
       }));
     } catch (error) {
-      console.error("Error extracting todos:", error);
+      console.error("Error extracting actions:", error);
       return [];
     }
   }
