@@ -8,6 +8,8 @@ export interface ActionItem {
   text: string;
   completed: boolean;
   createdAt: number;
+  serverId?: number; // ID from the server when synced
+  lastUpdated?: number; // Last update timestamp for conflict resolution
 }
 
 const STORAGE_KEY = "actions";

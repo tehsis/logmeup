@@ -5,12 +5,17 @@ import {
   saveNote,
   getAllDates,
 } from "../models/Note";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeClasses } from "../utils/theme";
 
 interface NotesProps {
   onContentChange: (content: string, lastModified: number) => void;
 }
 
 export function Notes({ onContentChange }: NotesProps) {
+  const { isDark } = useTheme();
+  const theme = getThemeClasses(isDark);
+  
   const [selectedDate, setSelectedDate] = useState<string>(
     () => new Date().toISOString().split("T")[0]
   );
@@ -49,13 +54,17 @@ export function Notes({ onContentChange }: NotesProps) {
   const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
   return (
-    <div className="p-4 h-full flex flex-col">
+    <div className={`p-4 h-full flex flex-col ${theme.bg.primary}`}>
       <div className="flex justify-between items-center mb-4 flex-shrink-0">
-        <h1 className="text-2xl font-bold">My Notes</h1>
+        <h1 className={`text-2xl font-bold ${theme.text.primary}`}>My Notes</h1>
         <select
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-3 py-2 bg-black border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            isDark 
+              ? 'bg-gray-800 border-gray-600 text-white' 
+              : 'bg-white border-gray-300 text-gray-900'
+          }`}
         >
           {availableDates.map((date) => (
             <option key={date} value={date}>
@@ -74,8 +83,11 @@ export function Notes({ onContentChange }: NotesProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           disabled={!isToday}
-          className={`w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto
-            ${!isToday ? "bg-gray-800 cursor-not-allowed" : ""}`}
+          className={`w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto ${
+            !isToday 
+              ? `${isDark ? 'bg-gray-800' : 'bg-gray-100'} cursor-not-allowed ${theme.text.muted}` 
+              : `${theme.bg.input} ${theme.border.input} ${theme.text.primary}`
+          }`}
           placeholder={
             isToday
               ? "Start writing your note here..."
@@ -84,7 +96,7 @@ export function Notes({ onContentChange }: NotesProps) {
         />
       </div>
       {!isToday && (
-        <div className="mt-2 text-sm text-gray-500">
+        <div className={`mt-2 text-sm ${theme.text.muted}`}>
           This note is from a previous day and cannot be edited
         </div>
       )}

@@ -3,16 +3,29 @@ import { Action } from "../components/Action";
 import { Notes } from "../components/Notes";
 import { useActionExtraction } from "../hooks/useActionExtraction";
 import { useAction } from "../hooks/useAction";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { getThemeClasses, getTabClasses } from "../utils/theme";
 
 type Tab = "notes" | "todos";
 
-export default function NotesPage() {
+function NotesPageContent() {
   const [activeTab, setActiveTab] = useState<Tab>("notes");
   const [content, setContent] = useState<string>("");
   const [lastModified, setLastModified] = useState<number>(Date.now());
+  
+  const { isDark } = useTheme();
+  const theme = getThemeClasses(isDark);
 
-  const { actions, newAction, setNewAction, addAction, toggleAction, deleteAction } =
-    useAction();
+  const { 
+    actions, 
+    newAction, 
+    setNewAction, 
+    addAction, 
+    toggleAction, 
+    deleteAction,
+    syncStatus,
+    syncWithServer 
+  } = useAction();
   const { candidates, isLoading, error } = useActionExtraction(content || "");
 
   const handleContentChange = (newContent: string, newLastModified: number) => {
@@ -25,26 +38,18 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="md:hidden border-b">
+    <div className={`h-screen flex flex-col ${theme.bg.primary}`}>
+      <div className={`md:hidden border-b ${theme.border.primary} ${theme.bg.primary}`}>
         <div className="flex">
           <button
             onClick={() => setActiveTab("notes")}
-            className={`flex-1 py-3 px-4 text-center font-medium ${
-              activeTab === "notes"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500"
-            }`}
+            className={getTabClasses(isDark, activeTab === "notes")}
           >
             Notes
           </button>
           <button
             onClick={() => setActiveTab("todos")}
-            className={`flex-1 py-3 px-4 text-center font-medium ${
-              activeTab === "todos"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500"
-            }`}
+            className={getTabClasses(isDark, activeTab === "todos")}
           >
             Todo List
           </button>
@@ -64,7 +69,7 @@ export default function NotesPage() {
 
         <div
           className={`
-            md:border-r md:block overflow-y-auto
+            md:border-r ${theme.border.primary} md:block overflow-y-auto
             ${activeTab === "todos" ? "flex-1" : "hidden"}
           `}
         >
@@ -79,9 +84,19 @@ export default function NotesPage() {
             isLoading={isLoading}
             error={error}
             onAddCandidate={handleAddCandidate}
+            syncStatus={syncStatus}
+            syncWithServer={syncWithServer}
           />
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NotesPage() {
+  return (
+    <ThemeProvider>
+      <NotesPageContent />
+    </ThemeProvider>
   );
 }

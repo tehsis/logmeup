@@ -13,3 +13,75 @@ body {
     color-scheme: dark;
   }
 }
+
+/* Custom theme styles */
+.light {
+  --bg-primary: theme(colors.white);
+  --bg-secondary: theme(colors.gray.50);
+  --text-primary: theme(colors.gray.900);
+  --text-secondary: theme(colors.gray.600);
+  --border-primary: theme(colors.gray.300);
+}
+
+.dark {
+  --bg-primary: theme(colors.gray.900);
+  --bg-secondary: theme(colors.gray.800);
+  --text-primary: theme(colors.white);
+  --text-secondary: theme(colors.gray.300);
+  --border-primary: theme(colors.gray.600);
+}
+
+/* Ensure scrollbars match theme */
+.light ::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Scrollbar general styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+}
+
+/* Focus ring improvements for accessibility */
+.light *:focus {
+  outline-color: #3b82f6;
+}
+
+.dark *:focus {
+  outline-color: #60a5fa;
+}
+
+/* Selection colors */
+.light ::selection {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+.dark ::selection {
+  background-color: #1e3a8a;
+  color: #dbeafe;
+}
