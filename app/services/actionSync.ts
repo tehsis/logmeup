@@ -1,5 +1,6 @@
 import type { ActionItem } from "../models/Action";
 import { actionApiService, type ApiAction, type CreateActionRequest, type UpdateActionRequest, type PendingAction } from "./actionApi";
+import { noteApiService } from "./noteApi";
 
 const PENDING_ACTIONS_KEY = "pending_actions";
 const LAST_SYNC_KEY = "last_sync";
@@ -162,22 +163,36 @@ class ActionSyncService {
   }
 
   // Queue operations for offline use
-  queueCreateAction(action: ActionItem) {
+  async queueCreateAction(action: ActionItem) {
     logSyncInfo('QueueCreate', 'Queueing action for creation', {
       localId: action.id,
       text: action.text,
     });
     
-    const queue = this.getSyncQueue();
-    queue.create.push({
-      localId: action.id,
-      data: {
-        note_id: 1, // Default note ID for now - can be parameterized later
-        description: action.text,
+    try {
+      // Get today's note ID, or use 1 as fallback if offline
+      let noteId = 1;
+      try {
+        noteId = await noteApiService.getOrCreateTodayNote();
+        logSyncInfo('QueueCreate', 'Got today\'s note ID', { noteId });
+      } catch (error) {
+        logSyncError('QueueCreate', error, 'Failed to get today\'s note ID, using fallback');
       }
-    });
-    this.setSyncQueue(queue);
-    logSyncSuccess('QueueCreate', 'Action queued for creation');
+      
+      const queue = this.getSyncQueue();
+      queue.create.push({
+        localId: action.id,
+        data: {
+          note_id: noteId,
+          description: action.text,
+        }
+      });
+      this.setSyncQueue(queue);
+      logSyncSuccess('QueueCreate', 'Action queued for creation', { noteId });
+    } catch (error) {
+      logSyncError('QueueCreate', error, 'Failed to queue action for creation');
+      throw error;
+    }
   }
 
   queueUpdateAction(action: ActionItem) {

@@ -8,7 +8,7 @@ interface ActionProps {
   actions: ActionItem[];
   newAction: string;
   setNewAction: (value: string) => void;
-  addAction: (e: React.FormEvent) => void;
+  addAction: (e: React.FormEvent) => Promise<void>;
   toggleAction: (id: number) => void;
   deleteAction: (id: number) => void;
   candidates: ActionCandidate[];

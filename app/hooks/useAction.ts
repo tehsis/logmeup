@@ -46,7 +46,7 @@ export function useAction() {
     }
   }, [syncStatus.isOnline]);
 
-  const addAction = (e: React.FormEvent) => {
+  const addAction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newAction.trim() === "") return;
 
@@ -54,8 +54,12 @@ export function useAction() {
     setActions([...actions, action]);
     setNewAction("");
 
-    // Queue for sync
-    actionSyncService.queueCreateAction(action);
+    // Queue for sync (now async)
+    try {
+      await actionSyncService.queueCreateAction(action);
+    } catch (error) {
+      console.error("Failed to queue action for sync:", error);
+    }
   };
 
   const toggleAction = (id: number) => {
