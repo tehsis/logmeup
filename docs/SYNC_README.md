@@ -2,7 +2,8 @@
 
 ## Overview
 
-The Action Sync System provides offline-first functionality for managing action items with automatic synchronization to a REST API backend. **Actions are always associated with today's note**, ensuring proper organization and context.
+The Action Sync System provides offline-first functionality for managing action items with automatic synchronization to a REST API backend. 
+**Actions are always associated with today's note**, ensuring proper organization and context. In the future, the user will be able to track other kind of notes rather than logs and those notes might have their own actions.
 
 ## Key Features
 

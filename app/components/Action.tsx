@@ -9,14 +9,14 @@ interface ActionProps {
   newAction: string;
   setNewAction: (value: string) => void;
   addAction: (e: React.FormEvent) => Promise<void>;
-  toggleAction: (id: number) => void;
-  deleteAction: (id: number) => void;
+  toggleAction: (id: number) => Promise<void>;
+  deleteAction: (id: number) => Promise<void>;
   candidates: ActionCandidate[];
   isLoading: boolean;
   error: string | null;
   onAddCandidate: (text: string) => void;
   syncStatus: SyncStatus;
-  syncWithServer: () => Promise<{ success: boolean; error?: string }>;
+  manualSync?: () => Promise<{ success: boolean; error?: string }>; // Optional for debugging
 }
 
 export function Action({
@@ -31,19 +31,40 @@ export function Action({
   error,
   onAddCandidate,
   syncStatus,
-  syncWithServer,
+  manualSync,
 }: ActionProps) {
   const { isDark, toggleTheme } = useTheme();
   const theme = getThemeClasses(isDark);
-
-  const handleManualSync = async () => {
-    await syncWithServer();
-  };
 
   const formatLastSync = (timestamp: number | null) => {
     if (!timestamp) return "Never";
     const date = new Date(timestamp);
     return date.toLocaleString();
+  };
+
+  const getConnectionStatusDisplay = () => {
+    if (syncStatus.wsConnected && syncStatus.isOnline) {
+      return (
+        <div className="flex items-center gap-1">
+          <div className={`w-2 h-2 rounded-full ${theme.status.online}`} />
+          <span className={theme.text.success}>Real-time</span>
+        </div>
+      );
+    } else if (syncStatus.isOnline) {
+      return (
+        <div className="flex items-center gap-1">
+          <div className={`w-2 h-2 rounded-full bg-yellow-500`} />
+          <span className={theme.text.primary}>Online</span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-1">
+          <div className={`w-2 h-2 rounded-full ${theme.status.offline}`} />
+          <span className={theme.text.danger}>Offline</span>
+        </div>
+      );
+    }
   };
 
   return (
@@ -61,18 +82,9 @@ export function Action({
             {isDark ? '☀️' : '🌙'}
           </button>
           
-          {/* Sync Status and Controls */}
+          {/* Real-time Connection Status */}
           <div className="flex items-center gap-2 text-sm">
-            <div className="flex items-center gap-1">
-              <div 
-                className={`w-2 h-2 rounded-full ${
-                  syncStatus.isOnline ? theme.status.online : theme.status.offline
-                }`}
-              />
-              <span className={syncStatus.isOnline ? theme.text.success : theme.text.danger}>
-                {syncStatus.isOnline ? 'Online' : 'Offline'}
-              </span>
-            </div>
+            {getConnectionStatusDisplay()}
             
             {syncStatus.pendingCount > 0 && (
               <span className={theme.status.pending}>
@@ -80,27 +92,30 @@ export function Action({
               </span>
             )}
             
-            <button
-              onClick={handleManualSync}
-              disabled={syncStatus.syncing}
-              className={`px-2 py-1 text-xs rounded ${
-                syncStatus.syncing 
-                  ? `${theme.bg.secondary} ${theme.text.muted} cursor-not-allowed` 
-                  : `${theme.bg.button} text-white ${theme.bg.buttonHover}`
-              }`}
-            >
-              {syncStatus.syncing ? 'Syncing...' : 'Sync'}
-            </button>
+            {syncStatus.syncing && (
+              <span className={`text-xs ${theme.text.muted} italic`}>
+                Syncing...
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Last Sync Info */}
-      {syncStatus.lastSync && (
-        <div className={`text-xs ${theme.text.muted} mb-2 flex-shrink-0`}>
-          Last sync: {formatLastSync(syncStatus.lastSync)}
+      {/* Connection Details */}
+      <div className={`text-xs ${theme.text.muted} mb-2 flex-shrink-0 space-y-1`}>
+        {syncStatus.lastSync && (
+          <div>Last sync: {formatLastSync(syncStatus.lastSync)}</div>
+        )}
+        <div className="flex gap-4">
+          <span>API: {syncStatus.isOnline ? '✓' : '✗'}</span>
+          <span>WebSocket: {syncStatus.wsConnected ? '✓' : '✗'}</span>
+          {syncStatus.pendingCount > 0 && (
+            <span className={theme.status.pending}>
+              {syncStatus.pendingCount} queued
+            </span>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Action Input Form */}
       <form onSubmit={addAction} className="mb-4 flex-shrink-0">
@@ -181,7 +196,10 @@ export function Action({
               </span>
               <div className="flex items-center gap-2">
                 {!action.serverId && (
-                  <span className={`text-xs ${theme.status.pending}`} title="Not synced">
+                  <span 
+                    className={`text-xs ${theme.status.pending} animate-pulse`} 
+                    title="Queued for sync"
+                  >
                     ●
                   </span>
                 )}

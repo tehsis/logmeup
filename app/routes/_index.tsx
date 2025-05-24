@@ -24,7 +24,7 @@ function NotesPageContent() {
     toggleAction, 
     deleteAction,
     syncStatus,
-    syncWithServer 
+    manualSync
   } = useAction();
   const { candidates, isLoading, error } = useActionExtraction(content || "");
 
@@ -85,7 +85,6 @@ function NotesPageContent() {
             error={error}
             onAddCandidate={handleAddCandidate}
             syncStatus={syncStatus}
-            syncWithServer={syncWithServer}
           />
         </div>
       </div>

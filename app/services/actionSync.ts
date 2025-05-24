@@ -1,6 +1,7 @@
 import type { ActionItem } from "../models/Action";
 import { actionApiService, type ApiAction, type CreateActionRequest, type UpdateActionRequest, type PendingAction } from "./actionApi";
 import { noteApiService } from "./noteApi";
+import { webSocketService, type WebSocketEventHandlers } from "./websocketService";
 
 const PENDING_ACTIONS_KEY = "pending_actions";
 const LAST_SYNC_KEY = "last_sync";
@@ -14,6 +15,7 @@ export interface SyncQueue {
 
 export interface SyncStatus {
   isOnline: boolean;
+  wsConnected: boolean;
   lastSync: number | null;
   pendingCount: number;
   syncing: boolean;
@@ -43,9 +45,78 @@ const logSyncSuccess = (operation: string, message: string, data?: any) => {
 class ActionSyncService {
   private syncInProgress = false;
   private syncListeners: Array<(status: SyncStatus) => void> = [];
+  private wsConnected = false;
 
   constructor() {
-    logSyncInfo('Constructor', 'ActionSyncService initialized');
+    logSyncInfo('Constructor', 'ActionSyncService initialized with real-time support');
+    this.initializeWebSocket();
+  }
+
+  private initializeWebSocket() {
+    const handlers: WebSocketEventHandlers = {
+      onConnected: () => {
+        logSyncSuccess('WebSocket', 'WebSocket connected');
+        this.wsConnected = true;
+        this.notifyStatusChange();
+      },
+      onDisconnected: () => {
+        logSyncInfo('WebSocket', 'WebSocket disconnected');
+        this.wsConnected = false;
+        this.notifyStatusChange();
+      },
+      onError: (error) => {
+        logSyncError('WebSocket', error, 'WebSocket connection error');
+        this.wsConnected = false;
+        this.notifyStatusChange();
+      },
+      onActionCreated: (action) => {
+        logSyncInfo('WebSocket', 'Received action created event', action);
+        this.handleRemoteActionCreated(action);
+      },
+      onActionUpdated: (action) => {
+        logSyncInfo('WebSocket', 'Received action updated event', action);
+        this.handleRemoteActionUpdated(action);
+      },
+      onActionDeleted: (actionId) => {
+        logSyncInfo('WebSocket', 'Received action deleted event', { actionId });
+        this.handleRemoteActionDeleted(actionId);
+      },
+    };
+
+    webSocketService.connect(handlers);
+  }
+
+  // Remote event handlers for real-time updates
+  private handleRemoteActionCreated(action: ActionItem) {
+    // Notify listeners about the remote action (this will update UI)
+    this.syncListeners.forEach(listener => {
+      try {
+        // For remote events, we trigger a status change to let the UI refresh
+        this.notifyStatusChange();
+      } catch (error) {
+        logSyncError('RemoteEvent', error, 'Error in remote action created handler');
+      }
+    });
+  }
+
+  private handleRemoteActionUpdated(action: ActionItem) {
+    this.syncListeners.forEach(listener => {
+      try {
+        this.notifyStatusChange();
+      } catch (error) {
+        logSyncError('RemoteEvent', error, 'Error in remote action updated handler');
+      }
+    });
+  }
+
+  private handleRemoteActionDeleted(actionId: number) {
+    this.syncListeners.forEach(listener => {
+      try {
+        this.notifyStatusChange();
+      } catch (error) {
+        logSyncError('RemoteEvent', error, 'Error in remote action deleted handler');
+      }
+    });
   }
 
   addSyncListener(listener: (status: SyncStatus) => void) {
@@ -58,7 +129,8 @@ class ActionSyncService {
     this.syncListeners = this.syncListeners.filter(l => l !== listener);
   }
 
-  private notifyListeners(status: SyncStatus) {
+  private async notifyStatusChange() {
+    const status = await this.getSyncStatus();
     logSyncInfo('Listener', 'Notifying listeners of status change', status);
     this.syncListeners.forEach(listener => {
       try {
@@ -144,6 +216,7 @@ class ActionSyncService {
       
       const status = {
         isOnline,
+        wsConnected: this.wsConnected,
         lastSync: this.getLastSync(),
         pendingCount,
         syncing: this.syncInProgress,
@@ -155,6 +228,7 @@ class ActionSyncService {
       logSyncError('Status', error, 'Failed to get sync status');
       return {
         isOnline: false,
+        wsConnected: this.wsConnected,
         lastSync: this.getLastSync(),
         pendingCount: 0,
         syncing: this.syncInProgress,
@@ -189,13 +263,16 @@ class ActionSyncService {
       });
       this.setSyncQueue(queue);
       logSyncSuccess('QueueCreate', 'Action queued for creation', { noteId });
+
+      // Try to sync immediately if online
+      await this.autoSyncIfOnline();
     } catch (error) {
       logSyncError('QueueCreate', error, 'Failed to queue action for creation');
       throw error;
     }
   }
 
-  queueUpdateAction(action: ActionItem) {
+  async queueUpdateAction(action: ActionItem) {
     logSyncInfo('QueueUpdate', 'Queueing action for update', {
       localId: action.id,
       serverId: action.serverId,
@@ -224,9 +301,12 @@ class ActionSyncService {
     }
     this.setSyncQueue(queue);
     logSyncSuccess('QueueUpdate', 'Action queued for update');
+
+    // Try to sync immediately if online
+    await this.autoSyncIfOnline();
   }
 
-  queueDeleteAction(action: ActionItem) {
+  async queueDeleteAction(action: ActionItem) {
     logSyncInfo('QueueDelete', 'Queueing action for deletion', {
       localId: action.id,
       serverId: action.serverId,
@@ -251,6 +331,25 @@ class ActionSyncService {
     }
     this.setSyncQueue(queue);
     logSyncSuccess('QueueDelete', 'Action queued for deletion');
+
+    // Try to sync immediately if online
+    await this.autoSyncIfOnline();
+  }
+
+  // Auto-sync if online and not already syncing
+  private async autoSyncIfOnline() {
+    try {
+      const isOnline = await actionApiService.isOnline();
+      const queue = this.getSyncQueue();
+      const hasPendingOperations = queue.create.length > 0 || queue.update.length > 0 || queue.delete.length > 0;
+      
+      if (isOnline && hasPendingOperations && !this.syncInProgress) {
+        logSyncInfo('AutoSync', 'Starting automatic sync');
+        await this.syncWithServer();
+      }
+    } catch (error) {
+      logSyncError('AutoSync', error, 'Auto-sync failed, will retry later');
+    }
   }
 
   async syncWithServer(): Promise<{ success: boolean; error?: string }> {
@@ -261,8 +360,7 @@ class ActionSyncService {
 
     logSyncInfo('Sync', 'Starting sync with server');
     this.syncInProgress = true;
-    const initialStatus = await this.getSyncStatus();
-    this.notifyListeners({ ...initialStatus, syncing: true });
+    await this.notifyStatusChange();
 
     try {
       const isOnline = await actionApiService.isOnline();
@@ -336,14 +434,12 @@ class ActionSyncService {
         deletedCount: results.deletes.length,
       });
 
-      const finalStatus = await this.getSyncStatus();
-      this.notifyListeners({ ...finalStatus, syncing: false });
+      await this.notifyStatusChange();
 
       return { success: true };
     } catch (error) {
       logSyncError('Sync', error, 'Sync failed');
-      const finalStatus = await this.getSyncStatus();
-      this.notifyListeners({ ...finalStatus, syncing: false });
+      await this.notifyStatusChange();
       return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
     } finally {
       this.syncInProgress = false;
@@ -394,6 +490,17 @@ class ActionSyncService {
       logSyncError('FullSync', error, 'Full sync failed');
       return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
     }
+  }
+
+  // Connect/disconnect WebSocket
+  connectWebSocket() {
+    this.initializeWebSocket();
+  }
+
+  disconnectWebSocket() {
+    webSocketService.disconnect();
+    this.wsConnected = false;
+    this.notifyStatusChange();
   }
 }
 

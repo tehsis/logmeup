@@ -14,6 +14,7 @@ export function useAction() {
   const [newAction, setNewAction] = useState("");
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     isOnline: false,
+    wsConnected: false,
     lastSync: null,
     pendingCount: 0,
     syncing: false,
@@ -39,12 +40,23 @@ export function useAction() {
     };
   }, []);
 
-  // Auto-sync when coming online
+  // Automatically refresh actions when sync status changes (for real-time updates)
   useEffect(() => {
-    if (syncStatus.isOnline && syncStatus.pendingCount > 0 && !syncStatus.syncing) {
-      syncWithServer();
+    if (syncStatus.wsConnected && syncStatus.isOnline) {
+      // Refresh actions from server when real-time connection is established
+      refreshActionsFromServer();
     }
-  }, [syncStatus.isOnline]);
+  }, [syncStatus.wsConnected, syncStatus.isOnline]);
+
+  const refreshActionsFromServer = async () => {
+    try {
+      const result = await actionSyncService.fetchFromServer();
+      const mergedActions = mergeActions(actions, result);
+      setActions(mergedActions);
+    } catch (error) {
+      console.error("Failed to refresh actions from server:", error);
+    }
+  };
 
   const addAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +66,7 @@ export function useAction() {
     setActions([...actions, action]);
     setNewAction("");
 
-    // Queue for sync (now async)
+    // Queue for sync (now with automatic sync)
     try {
       await actionSyncService.queueCreateAction(action);
     } catch (error) {
@@ -62,28 +74,36 @@ export function useAction() {
     }
   };
 
-  const toggleAction = (id: number) => {
+  const toggleAction = async (id: number) => {
     const updatedActions = toggleActionCompletion(actions, id);
     setActions(updatedActions);
 
     // Find the updated action and queue for sync
     const updatedAction = updatedActions.find(a => a.id === id);
     if (updatedAction) {
-      actionSyncService.queueUpdateAction(updatedAction);
+      try {
+        await actionSyncService.queueUpdateAction(updatedAction);
+      } catch (error) {
+        console.error("Failed to queue action update for sync:", error);
+      }
     }
   };
 
-  const deleteAction = (id: number) => {
+  const deleteAction = async (id: number) => {
     const actionToDelete = actions.find(a => a.id === id);
     setActions(deleteActionById(actions, id));
 
     // Queue for sync
     if (actionToDelete) {
-      actionSyncService.queueDeleteAction(actionToDelete);
+      try {
+        await actionSyncService.queueDeleteAction(actionToDelete);
+      } catch (error) {
+        console.error("Failed to queue action deletion for sync:", error);
+      }
     }
   };
 
-  const syncWithServer = async () => {
+  const manualSync = async () => {
     try {
       const result = await actionSyncService.fullSync();
       if (result.success && result.actions) {
@@ -93,7 +113,7 @@ export function useAction() {
       }
       return result;
     } catch (error) {
-      console.error("Sync failed:", error);
+      console.error("Manual sync failed:", error);
       return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
     }
   };
@@ -124,6 +144,7 @@ export function useAction() {
     toggleAction,
     deleteAction,
     syncStatus,
-    syncWithServer,
+    manualSync, // Keep for debugging purposes, but UI won't show sync button
+    refreshActionsFromServer,
   };
 } 
