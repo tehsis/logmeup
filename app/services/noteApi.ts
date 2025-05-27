@@ -1,7 +1,10 @@
+import { useAuth0 } from '@auth0/auth0-react';
+
 const API_BASE_URL = "http://localhost:8080/api";
 
 export interface ApiNote {
   id: number;
+  user_id: string;
   content: string;
   date: string;
   created_at: string;
@@ -34,6 +37,27 @@ const logNoteError = (operation: string, error: any, context?: any) => {
 };
 
 class NoteApiService {
+  private getAccessToken: (() => Promise<string>) | null = null;
+
+  setTokenProvider(getAccessToken: () => Promise<string>) {
+    this.getAccessToken = getAccessToken;
+  }
+
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    if (!this.getAccessToken) {
+      throw new Error('Authentication not configured. Please login first.');
+    }
+    
+    try {
+      const token = await this.getAccessToken();
+      return {
+        'Authorization': `Bearer ${token}`,
+      };
+    } catch (error) {
+      throw new Error('Failed to get authentication token. Please login again.');
+    }
+  }
+
   private async fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 5000): Promise<Response> {
     const operation = `${options.method || 'GET'} ${url}`;
     logNoteInfo('Request', `Starting ${operation}`, { options });
@@ -45,11 +69,14 @@ class NoteApiService {
     }, timeout);
     
     try {
+      const authHeaders = await this.getAuthHeaders();
+      
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
+          ...authHeaders,
           ...options.headers,
         },
       });

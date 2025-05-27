@@ -1,7 +1,10 @@
+import { useAuth0 } from '@auth0/auth0-react';
+
 const API_BASE_URL = "http://localhost:8080/api";
 
 export interface ApiAction {
   id: number;
+  user_id: string;
   note_id: number;
   description: string;
   completed: boolean;
@@ -26,16 +29,40 @@ export interface PendingAction {
 }
 
 class ActionApiService {
+  private getAccessToken: (() => Promise<string>) | null = null;
+
+  setTokenProvider(getAccessToken: () => Promise<string>) {
+    this.getAccessToken = getAccessToken;
+  }
+
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    if (!this.getAccessToken) {
+      throw new Error('Authentication not configured. Please login first.');
+    }
+    
+    try {
+      const token = await this.getAccessToken();
+      return {
+        'Authorization': `Bearer ${token}`,
+      };
+    } catch (error) {
+      throw new Error('Failed to get authentication token. Please login again.');
+    }
+  }
+
   private async fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 5000): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
+      const authHeaders = await this.getAuthHeaders();
+      
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
+          ...authHeaders,
           ...options.headers,
         },
       });

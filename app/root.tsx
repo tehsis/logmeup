@@ -6,6 +6,8 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { AuthConfigProvider } from './contexts/AuthConfigContext';
+import { AuthProvider } from './components/AuthProvider';
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -42,7 +44,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <AuthConfigProvider>
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
+    </AuthConfigProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
