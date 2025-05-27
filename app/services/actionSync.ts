@@ -21,6 +21,13 @@ export interface SyncStatus {
   syncing: boolean;
 }
 
+// Add new interfaces for remote events
+export interface RemoteActionEvent {
+  type: 'created' | 'updated' | 'deleted';
+  action?: ActionItem;
+  actionId?: number;
+}
+
 // Enhanced logging utility for sync operations
 const logSyncInfo = (operation: string, message: string, data?: any) => {
   const timestamp = new Date().toISOString();
@@ -45,6 +52,7 @@ const logSyncSuccess = (operation: string, message: string, data?: any) => {
 class ActionSyncService {
   private syncInProgress = false;
   private syncListeners: Array<(status: SyncStatus) => void> = [];
+  private remoteEventListeners: Array<(event: RemoteActionEvent) => void> = [];
   private wsConnected = false;
 
   constructor() {
@@ -88,35 +96,41 @@ class ActionSyncService {
 
   // Remote event handlers for real-time updates
   private handleRemoteActionCreated(action: ActionItem) {
-    // Notify listeners about the remote action (this will update UI)
-    this.syncListeners.forEach(listener => {
+    logSyncInfo('WebSocket', 'Handling remote action created', action);
+    // Notify remote event listeners with the actual action data
+    this.remoteEventListeners.forEach(listener => {
       try {
-        // For remote events, we trigger a status change to let the UI refresh
-        this.notifyStatusChange();
+        listener({ type: 'created', action });
       } catch (error) {
         logSyncError('RemoteEvent', error, 'Error in remote action created handler');
       }
     });
+    // Also update sync status
+    this.notifyStatusChange();
   }
 
   private handleRemoteActionUpdated(action: ActionItem) {
-    this.syncListeners.forEach(listener => {
+    logSyncInfo('WebSocket', 'Handling remote action updated', action);
+    this.remoteEventListeners.forEach(listener => {
       try {
-        this.notifyStatusChange();
+        listener({ type: 'updated', action });
       } catch (error) {
         logSyncError('RemoteEvent', error, 'Error in remote action updated handler');
       }
     });
+    this.notifyStatusChange();
   }
 
   private handleRemoteActionDeleted(actionId: number) {
-    this.syncListeners.forEach(listener => {
+    logSyncInfo('WebSocket', 'Handling remote action deleted', { actionId });
+    this.remoteEventListeners.forEach(listener => {
       try {
-        this.notifyStatusChange();
+        listener({ type: 'deleted', actionId });
       } catch (error) {
         logSyncError('RemoteEvent', error, 'Error in remote action deleted handler');
       }
     });
+    this.notifyStatusChange();
   }
 
   addSyncListener(listener: (status: SyncStatus) => void) {
@@ -127,6 +141,16 @@ class ActionSyncService {
   removeSyncListener(listener: (status: SyncStatus) => void) {
     logSyncInfo('Listener', 'Removing sync listener');
     this.syncListeners = this.syncListeners.filter(l => l !== listener);
+  }
+
+  addRemoteEventListener(listener: (event: RemoteActionEvent) => void) {
+    logSyncInfo('Listener', 'Adding remote event listener');
+    this.remoteEventListeners.push(listener);
+  }
+
+  removeRemoteEventListener(listener: (event: RemoteActionEvent) => void) {
+    logSyncInfo('Listener', 'Removing remote event listener');
+    this.remoteEventListeners = this.remoteEventListeners.filter(l => l !== listener);
   }
 
   private async notifyStatusChange() {

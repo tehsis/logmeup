@@ -7,7 +7,7 @@ import {
   toggleActionCompletion,
   deleteActionById,
 } from "../models/Action";
-import { actionSyncService, type SyncStatus } from "../services/actionSync";
+import { actionSyncService, type SyncStatus, type RemoteActionEvent } from "../services/actionSync";
 
 export function useAction() {
   const [actions, setActions] = useState<ActionItem[]>(() => loadActions());
@@ -37,6 +37,83 @@ export function useAction() {
 
     return () => {
       actionSyncService.removeSyncListener(setSyncStatus);
+    };
+  }, []);
+
+  // Set up remote event listener for real-time updates
+  useEffect(() => {
+    const handleRemoteEvent = (event: RemoteActionEvent) => {
+      console.log('Received remote event:', event);
+      
+      switch (event.type) {
+        case 'created':
+          if (event.action) {
+            const newAction = event.action;
+            setActions(prevActions => {
+              // Check if action already exists (avoid duplicates)
+              // First check by server ID, then by text content for recently created actions
+              const exists = prevActions.some(a => {
+                // If both have server IDs, compare them
+                if (a.serverId && newAction.serverId) {
+                  return a.serverId === newAction.serverId;
+                }
+                // If the remote action has a server ID but local doesn't,
+                // check if it's the same action by text and recent creation time
+                if (!a.serverId && newAction.serverId) {
+                  const timeDiff = Math.abs(a.createdAt - newAction.createdAt);
+                  return a.text === newAction.text && timeDiff < 10000; // Within 10 seconds
+                }
+                return false;
+              });
+              
+              if (!exists) {
+                console.log('Adding remote action:', newAction);
+                return [newAction, ...prevActions];
+              } else {
+                // Update existing local action with server ID if it doesn't have one
+                console.log('Updating existing action with server ID:', newAction);
+                return prevActions.map(action => {
+                  if (!action.serverId && action.text === newAction.text) {
+                    const timeDiff = Math.abs(action.createdAt - newAction.createdAt);
+                    if (timeDiff < 10000) { // Within 10 seconds
+                      return { ...action, serverId: newAction.serverId, lastUpdated: newAction.lastUpdated };
+                    }
+                  }
+                  return action;
+                });
+              }
+            });
+          }
+          break;
+          
+        case 'updated':
+          if (event.action) {
+            const updatedAction = event.action;
+            setActions(prevActions => 
+              prevActions.map(action => 
+                action.serverId === updatedAction.id
+                  ? { ...action, ...updatedAction, id: action.id } // Keep local ID
+                  : action
+              )
+            );
+          }
+          break;
+          
+        case 'deleted':
+          if (event.actionId) {
+            const deletedActionId = event.actionId;
+            setActions(prevActions => 
+              prevActions.filter(action => action.serverId !== deletedActionId)
+            );
+          }
+          break;
+      }
+    };
+
+    actionSyncService.addRemoteEventListener(handleRemoteEvent);
+
+    return () => {
+      actionSyncService.removeRemoteEventListener(handleRemoteEvent);
     };
   }, []);
 
