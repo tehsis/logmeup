@@ -16,3 +16,28 @@ For its PoC, the app is developed using React Router v7 as fullstack framework, 
 ## Development
 
 If you want to try out or contribute to LogMeUP, simply clone this repo, install its dependencies using `npm i` and start it with `npm run dev`.
+
+## Running local [In Progress]
+
+You can run the whole app locally using minikube.
+
+To accomplish that you need to run a few things in advance:
+
+1. Docker image registry
+
+```bash
+$ podman container run -dt -p 5001:5000 --name registry docker.io/library/registry:3
+```
+
+2. Postgres database
+3. ollama server
+
+Then you need to build the images
+
+```bash
+$ podman build -t localhost:5001/logmeup-frontend
+```
+
+```bash
+$ podman image push localhost:5001/logmeup-frontend --tls-verify=false
+```
