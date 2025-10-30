@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "pulumi env run alidion/logmeup/dev -- react-router dev",
-    "dev-openai": "pulumi env run -i alidion/logmeup/dev-openai -- react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "dev": "pulumi env run alidion/logmeup/dev -- node server.js",
+    "dev-openai": "pulumi env run -i alidion/logmeup/dev-openai -- node serverv",
+    "start": "NODE_ENV=production node server.js",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
@@ -15,10 +15,11 @@
     "@langchain/core": "^0.3.45",
     "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.5.8",
+    "@react-router/express": "^7.9.5",
     "@react-router/fs-routes": "^7.5.0",
     "@react-router/node": "^7.5.0",
-    "@react-router/serve": "^7.5.0",
     "@uiw/react-md-editor": "^3.6.0",
+    "express": "^5.1.0",
     "isbot": "^5.1.17",
     "langchain": "^0.3.22",
     "react": "^19.0.0",
