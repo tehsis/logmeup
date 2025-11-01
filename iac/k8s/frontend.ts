@@ -9,12 +9,18 @@ const appLabels = { app: "logmeup-frontend" };
 
 const isMinikube = config.requireBoolean("isMinikube");
 
+const auth0 = config.requireObject<{
+  audience: string,
+  client_id: string,
+  callback_url: string,
+  domain: string
+}>("auth0");
+
+console.log(auth0)
+
 const auth0Secrets = new k8s.core.v1.Secret("auth0", {
   stringData: {
-    "audience": "studio.alidion.logmeup",
-    "callback_url": "https://dev.logmeup.local",
-    "client_id": "oJseeixzeSlyhhRkNE3GoSxuI2NIpthx",
-    "domain": "logmeup.us.auth0.com"
+    ...auth0
   }
 });
 
@@ -34,7 +40,7 @@ export const deployment = new k8s.apps.v1.Deployment("logemup-frontend", {
             spec: { 
               containers: [{ 
                 name: "logmeup-frontend", 
-                image: "10.108.157.26/logmeup-frontend",
+                image: "localhost:40569/logmeup-frontend",
                 env: [
                   {
                     name: "AUTH0_AUDIENCE",

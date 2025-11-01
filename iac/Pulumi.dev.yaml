@@ -1,2 +1,4 @@
+environment:
+  - frontend/dev
 config:
   logmeup:isMinikube: "true"
