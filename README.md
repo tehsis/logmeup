@@ -23,21 +23,26 @@ You can run the whole app locally using minikube.
 
 To accomplish that you need to run a few things in advance:
 
-1. Docker image registry
+1.  Enable minikube registry addon
 
 ```bash
-$ podman container run -dt -p 5001:5000 --name registry docker.io/library/registry:3
+$ minikube addons enable registry
 ```
-
-2. Postgres database
-3. ollama server
-
-Then you need to build the images
+2. Build image & push to the registry
 
 ```bash
-$ podman build -t localhost:5001/logmeup-frontend
+$ podman build . - logmeup-frontend
+$ podman image push logmeup-frontend $(minikube ip):5000/logmeup-frontend --tls-verify=false
 ```
 
-```bash
-$ podman image push localhost:5001/logmeup-frontend --tls-verify=false
+3. Build the cluster from `iac` directory
+
+You'll need to have configuration ready (you can check the [./iac/index.ts](./iac/index.ts) file)
+
 ```
+$ pulumi up
+```
+
+4. Add urls to localhost
+
+Make sure to add `dev.logmeup.local` and `api.logmeup.local` to `/etc/hosts` using the ips from the service.
